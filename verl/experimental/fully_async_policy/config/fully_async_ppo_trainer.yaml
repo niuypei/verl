@@ -6,6 +6,11 @@ defaults:
   - ppo_trainer
   - _self_
 
+# Optional external runtime. A null profile keeps the native entry unchanged.
+multitask:
+  runtime:
+    profile: null
+
 async_training:
 
   # Maximum samples staleness threshold

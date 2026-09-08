@@ -235,7 +235,16 @@ def main(config):
     config.actor_rollout_ref.rollout.nnodes = config.rollout.nnodes
     config.actor_rollout_ref.rollout.n_gpus_per_node = config.rollout.n_gpus_per_node
     config = migrate_legacy_reward_impl(config)
-    run_ppo(config, task_runner_class=FullyAsyncTaskRunner)
+    task_runner_class = FullyAsyncTaskRunner
+    for path in ("multitask", "multitask.runtime"):
+        section = OmegaConf.select(config, path)
+        if section is not None and not OmegaConf.is_dict(section):
+            raise ValueError(f"{path} must be a mapping or null")
+    if OmegaConf.select(config, "multitask.runtime.profile") is not None:
+        from multi_task_scheduler.integration.verl.runtime_profile import resolve_runtime_profile
+
+        task_runner_class = resolve_runtime_profile(config)
+    run_ppo(config, task_runner_class=task_runner_class)
     print(f"total time: {time() - start_time:.2f} seconds")
 
 
